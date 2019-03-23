@@ -3,7 +3,7 @@ workflow "pull request" {
     "lint",
     "bundlesize",
     "test",
-    "canary release",
+    "canary unpublish",
     "filter PRs",
   ]
   on = "pull_request"
@@ -52,6 +52,16 @@ action "canary release" {
   }
   args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --abbrev-ref HEAD) --registry https://registry.verdaccio.org"
   needs = ["verdaccio"]
+}
+
+action "canary unpublish" {
+  uses = "./actions/cli"
+  needs = ["canary release"]
+  secrets = ["VERDACCIO_AUTH_TOKEN"]
+  args = "node bin/unpublish.js packages $(git rev-parse --abbrev-ref HEAD) https://$VERDACCIO_REGISTRY_URL"
+  env = {
+    VERDACCIO_REGISTRY_URL = "registry.verdaccio.org"
+  }
 }
 
 workflow "node 6" {
@@ -189,8 +199,7 @@ action "master:release alpha" {
 workflow "non-master branch" {
   on = "push"
   resolves = [
-    "non-master:build",
-    "non-master:test",
+    "non-master:test"
   ]
 }
 
