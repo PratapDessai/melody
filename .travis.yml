@@ -14,14 +14,14 @@ cache:
     - node_modules
 
 script:
-    - travis_retry yarn test-travis
+    - travis_retry yarn test-ci
     - travis_retry yarn bundlesize
 
 jobs:
     include:
         - stage: npm release
           node_js: "8"
-          script: yarn release-travis
+          script: yarn release-ci
 
 env:
     global:
