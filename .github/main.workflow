@@ -50,7 +50,7 @@ action "canary release" {
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --abbrev-ref HEAD) --registry https://registry.verdaccio.org"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
   needs = ["verdaccio"]
 }
 
@@ -183,7 +183,7 @@ action "master:verdaccio" {
 action "master:release alpha" {
   uses = "./actions/cli"
   needs = ["master:verdaccio"]
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag prerelease --registry https://registry.verdaccio.org"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
 }
 
 workflow "non-master branch" {
@@ -213,7 +213,7 @@ action "non-master:test" {
 workflow "pull request closed" {
   on = "pull_request"
   resolves = [
-    "canary unpublish"
+    "remove dist-tag"
   ]
 }
 
@@ -222,11 +222,11 @@ action "filter PR closed" {
   args = "action 'closed'"
 }
 
-action "canary unpublish" {
+action "remove dist-tag" {
   uses = "./actions/cli"
   needs = ["filter PR closed"]
   secrets = ["REGISTRY_AUTH_TOKEN"]
-  args = "node bin/unpublish.js packages $(git rev-parse --abbrev-ref HEAD) https://$REGISTRY_URL"
+  args = "node bin/dist-tag-rm.js packages $(git rev-parse --abbrev-ref HEAD) https://$REGISTRY_URL"
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }

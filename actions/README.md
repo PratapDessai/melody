@@ -43,7 +43,7 @@ This workflow only triggered by the pull request, using following events:
 Also, On every event, we runs the **build**, **lint**, **unit tests**, **e2e** and publish the **canary dist-tag** on npm registry. This tag can be used for testing purposes. 
 
 #### <a id="toc-pr-closed"></a>Pull request closed
-This workflow removes or un-publishes the **Canary dist-tag** which we publish in the [Pull request](#toc-pr) workflow. As the pull request can be merged or closed, the dist-tag will no longer in use. The successful merge in any other branch will publish the **prerelease dist-tag** or **canary dist-tag**.
+This workflow removes the **Canary dist-tag** which we publish in the [Pull request](#toc-pr) workflow. As the pull request can be merged or closed, the dist-tag will no longer in use. The successful merge in any other branch will publish the **prerelease dist-tag** or **canary dist-tag**.
 
 #### <a id="toc-master-branch-only"></a>Master branch only
 This workflow performs all the tasks mentioned in (Pull request workflow)[#toc-pr], but in the end it publishes **prerelease dist-tag** to npm registry.

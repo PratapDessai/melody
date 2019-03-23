@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Un-publish the dist-tags from the registry.
- *
+ * Removes the dist-tags from the registry.
+ * eg. npm dist-tag rm <package-name> <tag-name>
  */
 const fs = require('fs');
 
