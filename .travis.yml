@@ -14,7 +14,7 @@ cache:
     - node_modules
 
 script:
-    - travis_retry yarn test-ci
+    - travis_retry yarn test-travis
     - travis_retry yarn bundlesize
 
 jobs:
