@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Unpublish the dist-tags from the registry.
+ * Un-publish the dist-tags from the registry.
  *
  */
 const fs = require('fs');
@@ -34,9 +34,6 @@ fs.readdir(directory, function(err, items) {
                     console.error(`stderr: ${stderr}`);
                 }
                 console.log(stdout);
-                console.log(
-                    `successfully removed dist-tag ${distTag} for: ${packageName}`
-                );
             }
         );
     });

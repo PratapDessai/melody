@@ -15,19 +15,6 @@ then
 fi
 
 echo
-echo "CHECKING LOGGED USER on https://registry.npmjs.org"
-echo
-npm whoami --registry https://registry.npmjs.org
-
-if [ ! $? -eq 0 ]; then
-    echo
-    echo "PLEASE AUTHENTICATE NPM VIA 'npm adduser'"
-    echo
-    exit 1
-fi
-
-
-echo
 # Peer dependency prompt
 read -p "IS THIS A MAJOR UPDATE? (e.g. 1.0.0 => 2.0.0)" -n 1 -r
 echo
@@ -37,18 +24,13 @@ then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-        echo "UPDATING"
-        yarn install && \
-            yarn test && \
-            ./node_modules/.bin/lerna publish --exact --force-publish=*
+        echo "Push the recently created tag to github and create release."
+
     else
         echo "PLEASE RUN 'yarn update-peers' AND COMMIT YOUR CHANGES BEFORE PROCEEDING"
         exit 1
     fi
 
 else
-    echo "UPDATING"
-    yarn install && \
-        yarn test && \
-        ./node_modules/.bin/lerna publish --exact --force-publish=*
+    echo "Push the recently created tag to github and create release."
 fi

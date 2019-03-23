@@ -3,7 +3,7 @@ workflow "pull request" {
     "lint",
     "bundlesize",
     "test",
-    "canary unpublish",
+    "canary release",
     "filter PRs",
   ]
   on = "pull_request"
@@ -46,22 +46,12 @@ action "verdaccio" {
 
 action "canary release" {
   uses = "./actions/cli"
-  secrets = ["VERDACCIO_AUTH_TOKEN"]
+  secrets = ["REGISTRY_AUTH_TOKEN"]
   env = {
-    VERDACCIO_REGISTRY_URL = "registry.verdaccio.org"
+    REGISTRY_URL = "registry.verdaccio.org"
   }
   args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --abbrev-ref HEAD) --registry https://registry.verdaccio.org"
   needs = ["verdaccio"]
-}
-
-action "canary unpublish" {
-  uses = "./actions/cli"
-  needs = ["canary release"]
-  secrets = ["VERDACCIO_AUTH_TOKEN"]
-  args = "node bin/unpublish.js packages $(git rev-parse --abbrev-ref HEAD) https://$VERDACCIO_REGISTRY_URL"
-  env = {
-    VERDACCIO_REGISTRY_URL = "registry.verdaccio.org"
-  }
 }
 
 workflow "node 6" {
@@ -143,10 +133,10 @@ action "release:test" {
 action "release:publish" {
   uses = "./actions/cli"
   needs = ["release:test"]
-  secrets = ["VERDACCIO_AUTH_TOKEN"]
+  secrets = ["REGISTRY_AUTH_TOKEN"]
   args = "yarn lerna publish --exact --force-publish=* --registry https://registry.verdaccio.org"
   env = {
-    VERDACCIO_REGISTRY_URL = "registry.verdaccio.org"
+    REGISTRY_URL = "registry.verdaccio.org"
   }
 }
 
@@ -218,4 +208,26 @@ action "non-master:test" {
   uses = "docker://node:8"
   args = "yarn test"
   needs = ["non-master:build"]
+}
+
+workflow "pull request closed" {
+  on = "pull_request"
+  resolves = [
+    "canary unpublish"
+  ]
+}
+
+action "filter PR closed" {
+  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  args = "action 'closed'"
+}
+
+action "canary unpublish" {
+  uses = "./actions/cli"
+  needs = ["filter PR closed"]
+  secrets = ["REGISTRY_AUTH_TOKEN"]
+  args = "node bin/unpublish.js packages $(git rev-parse --abbrev-ref HEAD) https://$REGISTRY_URL"
+  env = {
+    REGISTRY_URL = "registry.verdaccio.org"
+  }
 }
