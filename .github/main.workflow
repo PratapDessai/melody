@@ -51,6 +51,7 @@ action "canary release" {
   }
   args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
   needs = ["verdaccio"]
+  secrets = ["REGISTRY_AUTH_TOKEN"]
 }
 
 workflow "node 6" {
@@ -189,6 +190,10 @@ action "master:release alpha" {
   uses = "./actions/cli"
   needs = ["master:verdaccio"]
   args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
+  secrets = ["REGISTRY_AUTH_TOKEN"]
+  env = {
+    REGISTRY_URL = "registry.verdaccio.org"
+  }
 }
 
 workflow "non-master branch" {
@@ -234,4 +239,5 @@ action "remove dist-tag" {
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
+  secrets = ["REGISTRY_AUTH_TOKEN"]
 }
