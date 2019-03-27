@@ -46,11 +46,10 @@ action "verdaccio" {
 
 action "canary release" {
   uses = "./actions/cli"
-  secrets = ["REGISTRY_AUTH_TOKEN"]
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
   needs = ["verdaccio"]
 }
 
@@ -130,14 +129,20 @@ action "release:test" {
   args = "yarn test"
 }
 
-action "release:publish" {
+action "release: version" {
   uses = "./actions/cli"
   needs = ["release:test"]
-  secrets = ["REGISTRY_AUTH_TOKEN"]
-  args = "yarn lerna publish --exact --force-publish=* --registry https://registry.verdaccio.org"
+  args = "git checkout -b $(echo $GITHUB_REF | cut -d / -f3) && yarn lerna version $(echo $GITHUB_REF | cut -d / -f3) --no-push  --yes --force-publish"
+}
+
+action "release:publish" {
+  uses = "./actions/cli"
+  needs = ["release: version"]
+  args = "yarn lerna publish from-git --force-publish --yes --registry https://$REGISTRY_URL"
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
+  secrets = ["REGISTRY_AUTH_TOKEN"]
 }
 
 workflow "master branch only" {
@@ -183,13 +188,13 @@ action "master:verdaccio" {
 action "master:release alpha" {
   uses = "./actions/cli"
   needs = ["master:verdaccio"]
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
 }
 
 workflow "non-master branch" {
   on = "push"
   resolves = [
-    "non-master:test"
+    "non-master:test",
   ]
 }
 
@@ -213,7 +218,7 @@ action "non-master:test" {
 workflow "pull request closed" {
   on = "pull_request"
   resolves = [
-    "remove dist-tag"
+    "remove dist-tag",
   ]
 }
 
@@ -225,7 +230,6 @@ action "filter PR closed" {
 action "remove dist-tag" {
   uses = "./actions/cli"
   needs = ["filter PR closed"]
-  secrets = ["REGISTRY_AUTH_TOKEN"]
   args = "node bin/dist-tag-rm.js packages $(git rev-parse --abbrev-ref HEAD) https://$REGISTRY_URL"
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
