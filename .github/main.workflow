@@ -49,7 +49,7 @@ action "canary release" {
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag $(git rev-parse --abbrev-ref HEAD) --preid $(git rev-parse --short HEAD) --registry https://$REGISTRY_URL"
   needs = ["verdaccio"]
   secrets = ["REGISTRY_AUTH_TOKEN"]
 }
@@ -133,13 +133,13 @@ action "release:test" {
 action "release: version" {
   uses = "./actions/cli"
   needs = ["release:test"]
-  args = "git checkout -b $(echo $GITHUB_REF | cut -d / -f3) && yarn lerna version $(echo $GITHUB_REF | cut -d / -f3) --no-push  --yes --force-publish"
+  args = "git checkout -b $(echo $GITHUB_REF | cut -d / -f3) && yarn lerna version $(echo $GITHUB_REF | cut -d / -f3) --no-push  --yes --force-publish=*"
 }
 
 action "release:publish" {
   uses = "./actions/cli"
   needs = ["release: version"]
-  args = "yarn lerna publish from-git --force-publish --yes --registry https://$REGISTRY_URL"
+  args = "yarn lerna publish from-git --force-publish=* --yes --registry https://$REGISTRY_URL"
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
   }
@@ -189,7 +189,7 @@ action "master:verdaccio" {
 action "master:release alpha" {
   uses = "./actions/cli"
   needs = ["master:verdaccio"]
-  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
+  args = "n 8 && yarn lerna publish --no-git-tag-version --no-push --no-git-reset --exact --force-publish=* --canary --yes --dist-tag prerelease --registry https://$REGISTRY_URL"
   secrets = ["REGISTRY_AUTH_TOKEN"]
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
