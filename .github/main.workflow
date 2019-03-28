@@ -10,7 +10,7 @@ workflow "pull request" {
 }
 
 action "filter PRs" {
-  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  uses = "actions/bin/filter@master"
   args = "action 'opened|synchronize|reopened'"
 }
 
@@ -109,12 +109,18 @@ action "node11:test" {
 }
 
 workflow "release" {
-  on = "release"
+  on = "push"
   resolves = ["release:publish"]
 }
 
+action "release:tag-filter" {
+  uses = "actions/bin/filter@master"
+  args = "tag v*"
+}
+
 action "release:authorized users only" {
-  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  needs = ["release:tag-filter"]
+  uses = "actions/bin/filter@master"
   args = ["actor", "ayusharma", "pago"]
 }
 
@@ -130,15 +136,15 @@ action "release:test" {
   args = "yarn test"
 }
 
-action "release: version" {
-  uses = "./actions/cli"
-  needs = ["release:test"]
-  args = "git checkout -b $(echo $GITHUB_REF | cut -d / -f3) && yarn lerna version $(echo $GITHUB_REF | cut -d / -f3) --no-push  --yes --force-publish=*"
-}
+# action "release: version" {
+#   uses = "./actions/cli"
+#   needs = ["release:test"]
+#   args = "git checkout -b $(echo $GITHUB_REF | cut -d / -f3) && yarn lerna version $(echo $GITHUB_REF | cut -d / -f3) --no-push  --yes --force-publish=*"
+# }
 
 action "release:publish" {
   uses = "./actions/cli"
-  needs = ["release: version"]
+  needs = ["release:test"]
   args = "yarn lerna publish from-git --force-publish=* --yes --registry https://$REGISTRY_URL"
   env = {
     REGISTRY_URL = "registry.verdaccio.org"
@@ -152,7 +158,7 @@ workflow "master branch only" {
 }
 
 action "filter master branch" {
-  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  uses = "actions/bin/filter@master"
   args = "branch master"
 }
 
@@ -204,7 +210,7 @@ workflow "non-master branch" {
 }
 
 action "filter non-master branch" {
-  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  uses = "actions/bin/filter@master"
   args = "not branch master"
 }
 
@@ -228,7 +234,7 @@ workflow "pull request closed" {
 }
 
 action "filter PR closed" {
-  uses = "actions/bin/filter@d820d56839906464fb7a57d1b4e1741cf5183efa"
+  uses = "actions/bin/filter@master"
   args = "action 'closed'"
 }
 
